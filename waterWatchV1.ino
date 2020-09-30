@@ -1,5 +1,7 @@
 
 /******************************************************************************
+As before the base of this software is from the sparkfun library...I really do owe
+them a beer...
   SparkFun_MS5803_Demo.ino
   Demo Program for MS5803 pressure sensors.
   Casey Kuhns @ SparkFun Electronics
@@ -28,11 +30,13 @@
 
 #include <Wire.h>
 #include <SparkFun_MS5803_I2C.h> // Click here to get the library: http://librarymanager/All#SparkFun_MS5803-14BA
-
+#define fuelLevel 4
 // Begin class with selected address
 // available addresses (selected by jumper on board)
 // default is ADDRESS_HIGH
 
+
+//We are using the High address that we set in hardware when building the unit
 //  ADDRESS_HIGH = 0x76
 //  ADDRESS_LOW  = 0x77
 
@@ -44,12 +48,16 @@ double pressure_abs, pressure_relative, altitude_delta, pressure_baseline;
 double baseline = 0.0;
 // Create Variable to store altitude in (m) for calculations;
 double base_altitude = 1655.0; // Altitude of SparkFun's HQ in Boulder, CO. in (m)
+
+//Ring function that calls out when either limit has been reached 
 void ring() {
   digitalWrite(10, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(500);                       // wait for a second
   digitalWrite(10, LOW);    // turn the LED off by making the voltage LOW
   delay(100);
 }
+
+//Sets ringtone for doing the baseline pressure set
 void ringBaseline(){
   for(int i = 0; i < 10; i++){
   digitalWrite(10, HIGH);   // turn the LED on (HIGH is the voltage level)
@@ -58,6 +66,8 @@ void ringBaseline(){
   delay(100);
 }
 }
+
+//function for setting the basline pressure simple ten sample average
 void pressureBaseline(){
   pressure_baseline = sensor.getPressure(ADC_4096);
   delay(50);
@@ -69,6 +79,7 @@ void pressureBaseline(){
   pressure_baseline = total/10;
   Serial.print("BaselinePressure = ");
   Serial.println(pressure_baseline);
+//when completed calls the baseline ring function	
   ringBaseline();
 }
 void setup() {
@@ -103,7 +114,7 @@ void loop() {
 
   // Read pressure from the sensor in mbar.
   pressure_abs = sensor.getPressure(ADC_4096);
-  if ((pressure_abs - pressure_baseline) > 4) {
+  if ((pressure_abs - pressure_baseline) > fuelLevel) {
     ringBaseline();
   }
   // Let's do something interesting with our data.
